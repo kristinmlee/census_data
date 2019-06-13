@@ -1,0 +1,215 @@
+---
+title: "Census Data Analysis"
+author: "Kristin M Lee"
+date: "6/14/2019"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/Users/kristinlee/Documents/census/')
+```
+
+######  Load necessary packages.
+```{r 0, echo = FALSE}
+library(dplyr)
+library(lattice)
+library(RColorBrewer)
+library(lmtest)
+library(pROC)
+```
+
+
+###### Step 1 : Import the learning and text files
+```{r 1}
+#read learning csv file
+census = read.csv("census_income_learn.csv", header = FALSE)
+
+#read txt file containing information about census data
+#comments (lines starting with "|") are ignored
+metaData = read.delim("/Users/kristinlee/Documents/census/census_income_metadata.txt", stringsAsFactors = FALSE, sep = "\n", fill = TRUE, comment = "|")
+
+#get column names for dataset from metadata file
+#add last column: income level (+/- 50000)
+colNames = c(apply(metaData, 1, function(i) {
+  gsub(":.*", "", i)
+}), "income level")
+
+#collapse names: change spaces to _
+colNames_noSpace = gsub(" ", "_", colNames)
+
+#rename columns of dataset
+colnames(census) = colNames_noSpace
+
+#get each variable type - in the metadata file, numeric are listed as "continuous" while the rest ("nominal") have the possible levels and will be coded here as factors
+varDescriptions = apply(metaData, 1, function(i){
+  gsub(".*:", "", i)
+})
+
+#get continuous variables by which ones have continuous in description
+contVar = which(grepl("continuous", varDescriptions))
+
+#what are the continuous variables?
+colNames_noSpace[contVar]
+
+#Note: metadata file says to ignore instance_weight in classifiers
+
+#get rest as non-continuous variables
+notContVar = c(1:length(varDescriptions))[-contVar]
+
+#treat all non-continuous variables as factors
+for(i in notContVar) {
+  census[ ,i] = as.factor(census[ ,i])  
+}
+
+#double check this is correct
+#get type of continuous variables
+sapply(contVar, function(i) class(census[ , i]))
+#get type of non-continuous variables
+sapply(notContVar, function(i) class(census[ , i]))
+```
+
+###### Step 2: Based on the learning file, make a quick statistic based and univariate audit of the different columns’ content and produce the results in visual / graphic format. This audit should describe the variable distribution, the % of missing values, the extreme values, and so on.
+```{r 2}
+#get structure of data frame
+str(census)
+
+##make plots for each variable to get a sense of distribution
+
+#set color palette to use
+colPal = brewer.pal(4, "PuOr")
+colPal_all = rep(colPal, ceiling(ncol(census)/4))
+
+#make density plots for variables of type numeric or integer
+for(i in contVar) {
+  plot(density(census[ ,i]), main = paste("Distribution of", colNames[i]), col = colPal_all[i], cex.main = 0.7)
+}
+
+#make barplots for all factors
+for(i in notContVar) {
+  plot(census[ ,i], main = colNames[i], las = 2, col = colPal_all[i], ylab = "Number of entries", cex.axis = 0.7, cex.names = 0.6 )
+}
+
+##there are variables with "?" and "Not in universe"
+##we'll treat this as missing data and set to NA to make it easier to work with
+#note: this is a bit more complicated because we're dealing with factors but we can use recode_factor function from dplyr package
+for(i in notContVar) {
+  census[ ,i] = recode_factor(census[ ,i], " ?" = NA_character_)
+  census[ ,i] = recode_factor(census[ ,i], " Not in universe" = NA_character_)
+  census[ ,i] = recode_factor(census[ ,i], " Not in universe under 1 year old" = NA_character_)
+  census[ ,i] = recode_factor(census[ ,i], " Not in universe or children" = NA_character_)
+}
+
+#recheck structure of data
+str(census)
+
+#rename income_level levels to under/over because current naming (- 50000/50000+) could be more intuitive and has some weird spacing
+levels(census[ ,"income_level"])
+levels(census[ ,"income_level"]) = c("under", "over")
+```
+
+###### Step 3: Create a model using these variables (you can use whichever variables you want, or even create you own; for example, you could find the ratio or relationship between different variables, the one-hot encoding of “categorical” variables, etc.) to model wining more or less than $50,000 / year. Here, the idea would be for you to test one or two algorithms, such as logistic regression, or a decision tree. Feel free to choose others if wish.
+
+```{r 3}
+## I want to explore the data further before choosing variables for model building.
+
+#get how many entries (rows) have missing data
+sum(apply(census, 1, function(i) sum(is.na(i)) > 0))
+
+#every row has some amount of missing data, which is not surprising given that many entries were "Not in universe"
+nrow(census)
+
+#get number of entries with missing data for each variable
+numMissingPerCol = apply(census, 2, function(i) sum(is.na(i)))
+
+numMissingPerCol
+
+#some columns are complete (like age, education, wage_per_hour) and these seem like good variables to use to build models
+
+##for complete columns, create visualizations to see if there's patterns related to income_level
+#get variables with no missing data
+completeCol = which(numMissingPerCol == 0)
+
+#remove income_level and instance_weight from this vector because income_level is what we want to predict and we should not include instance_weight as a predictor
+completeCol = completeCol[-which(names(completeCol) == "income_level" | names(completeCol) == "instance_weight")]
+
+##visualize distributions of data separated by income_level for each variable
+
+#function to plot density of continuous variable by income_level
+plotDensityByIncome = function(i) {
+  densityplot(census[,i], groups=census[ ,"income_level"], xlab = colNames[i], plot.points=FALSE, auto.key=TRUE, main = list(label = paste(colNames[i], "by Income Level (under/over 50K)"), cex = 0.7))
+}
+#plot density for all continous variables with no missing data
+for(i in intersect(contVar, completeCol)) {
+  print(plotDensityByIncome(i)) #need print here because lattice plot is strange in for loops
+}
+
+#function to plot histograms of non-continuous variable by income_level
+plotHistByIncome = function(i) {
+  histogram(~census[ ,i] | census[ ,42], xlab = colNames[i], las = 1, layout = c(1, 2), scales = list(x = list(rot = 90, cex = 0.5)))
+}
+#plot histograms for all non-continous variables with no missing data
+for(i in intersect(notContVar, completeCol)) {
+  print(plotHistByIncome(i))
+}
+
+##based on the plots, I'm going to do two logistic regression with different predictors:
+
+#model 1- predictors: age, sex, race, marital status, education, detailed industry recode, detailed occupation recode, weeks worked in year, and number persons worked for employer
+model_1 = glm(income_level ~ age + sex + race + marital_stat + education + detailed_industry_recode + detailed_occupation_recode + weeks_worked_in_year + num_persons_worked_for_employer, family = binomial, na.action = na.omit, data = census) 
+
+#get summary of model 1
+summary(model_1)
+
+#model 2- predictors: age, sex, race, education, weeks worked in year
+#this a reduced set of the predictors used for model 1 because I wanted to know if we could still do accurate predictions with fewers predictors  
+model_2 = glm(income_level ~ age + sex + race + education + weeks_worked_in_year, data = census, family = binomial, na.action = na.omit) 
+
+#get summary of model 2
+summary(model_2)
+```
+
+###### Step 4: Choose the model that appears to have the highest performance based on a comparison between reality (the 42nd variable) and the model’s prediction. 
+
+```{r 4}
+##using model, predict outcome
+#if prediction > 0.5, label as "over", else label as "under" $50K income level
+probs_model1 = predict(model_1,  type='response')
+pred_model1 = ifelse(probs_model1 > 0.5, "over", "under")
+
+#calculate accuracy
+accuracy_model1 = mean(pred_model1 == census[ , "income_level"])
+accuracy_model1
+
+#same prediction and accuracy calculation for model 2
+probs_model2 = predict(model_2,  type='response')
+pred_model2 = ifelse(probs_model2 > 0.5, "over", "under")
+accuracy_model2 = mean(pred_model2 == census[ , "income_level"])
+accuracy_model2
+
+##model 1 is slightly more accurate but there are many more degrees of freedom so is it actually better?
+#these models are nested so can do likelihood ratio test
+lrtest(model_1, model_2)
+
+#they are statistically significant despite difference in degrees of freedom so let's proceed with model 1 as best fit of the 2
+
+##plot ROC curves to visualize and compare model sensitivity (true positive rate) and specificity (true negative rate) where "over" is positive
+
+#format data as numeric for ROC curves
+pred_model1_numeric = ifelse(pred_model1 == "under", 1, 2)
+roc_model1 = roc(income_level ~ pred_model1_numeric, data = census)
+
+pred_model2_numeric = ifelse(pred_model2 == "under", 1, 2)
+roc_model2 = roc(income_level ~ pred_model2_numeric, data = census)
+
+plot(roc_model1, col = colPal_all[1], main = "ROC curves (over = case, under = control)")
+lines(roc_model2, col = colPal_all[4])
+legend("topleft", c("Model 1", "Model 2"), col = colPal_all[c(1,4)], lty = 1)
+```
+
+
+###### Step 5: Apply your model to the test file and measure it’s real performance on it (same method as above).
+```{r 5}
+
+```
+
