@@ -1,41 +1,14 @@
-###### Load necessary packages.
+#### Load necessary packages.
 
-    ## Warning: package 'dplyr' was built under R version 3.4.2
+    library(dplyr)
+    library(lattice)
+    library(RColorBrewer)
+    library(lmtest)
+    library(pROC)
 
-    ## 
-    ## Attaching package: 'dplyr'
+### Step 1 : Import the learning and text files
 
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-    ## Warning: package 'lmtest' was built under R version 3.4.4
-
-    ## Loading required package: zoo
-
-    ## 
-    ## Attaching package: 'zoo'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     as.Date, as.Date.numeric
-
-    ## Warning: package 'pROC' was built under R version 3.4.4
-
-    ## Type 'citation("pROC")' for a citation.
-
-    ## 
-    ## Attaching package: 'pROC'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     cov, smooth, var
-
-###### Step 1 : Import the learning and text files
+#### A. Read files
 
     #read learning csv file
     census = read.csv("census_income_learn.csv", header = FALSE)
@@ -43,6 +16,8 @@
     #read txt file containing information about census data
     #comments (lines starting with "|") are ignored
     metaData = read.delim("/Users/kristinlee/Documents/census/census_income_metadata.txt", stringsAsFactors = FALSE, sep = "\n", fill = TRUE, comment = "|")
+
+#### B. Format variable names and explore/modify structure of the data.
 
     #get column names for dataset from metadata file
     #add last column: income level (+/- 50000)
@@ -98,8 +73,6 @@
     ## [22] "factor" "factor" "factor" "factor" "factor" "factor" "factor"
     ## [29] "factor" "factor" "factor" "factor" "factor"
 
-###### Step 2: Based on the learning file, make a quick statistic based and univariate audit of the different columns’ content and produce the results in visual / graphic format. This audit should describe the variable distribution, the % of missing values, the extreme values, and so on.
-
     #get structure of data frame
     str(census)
 
@@ -147,7 +120,9 @@
     ##  $ year                                      : Factor w/ 2 levels "94","95": 2 1 2 1 1 2 1 2 2 1 ...
     ##  $ income_level                              : Factor w/ 2 levels " - 50000."," 50000+.": 1 1 1 1 1 1 1 1 1 1 ...
 
-    ##make plots for each variable to get a sense of distribution
+### Step 2: Based on the learning file, make a quick statistic based and univariate audit of the different columns’ content and produce the results in visual / graphic format. This audit should describe the variable distribution, the % of missing values, the extreme values, and so on.
+
+#### A. Plot each variable to get a sense of their distributions.
 
     #set color palette to use
     colPal = brewer.pal(4, "PuOr")
@@ -158,17 +133,17 @@
       plot(density(census[ ,i]), main = paste("Distribution of", colNames[i]), col = colPal_all[i], cex.main = 0.7)
     }
 
-![](censusData_files/figure-markdown_strict/2-1.png)![](censusData_files/figure-markdown_strict/2-2.png)![](censusData_files/figure-markdown_strict/2-3.png)![](censusData_files/figure-markdown_strict/2-4.png)![](censusData_files/figure-markdown_strict/2-5.png)![](censusData_files/figure-markdown_strict/2-6.png)![](censusData_files/figure-markdown_strict/2-7.png)![](censusData_files/figure-markdown_strict/2-8.png)
+![](censusData_files/figure-markdown_strict/2A-1.png)![](censusData_files/figure-markdown_strict/2A-2.png)![](censusData_files/figure-markdown_strict/2A-3.png)![](censusData_files/figure-markdown_strict/2A-4.png)![](censusData_files/figure-markdown_strict/2A-5.png)![](censusData_files/figure-markdown_strict/2A-6.png)![](censusData_files/figure-markdown_strict/2A-7.png)![](censusData_files/figure-markdown_strict/2A-8.png)
 
     #make barplots for all factors
     for(i in notContVar) {
       plot(census[ ,i], main = colNames[i], las = 2, col = colPal_all[i], ylab = "Number of entries", cex.axis = 0.7, cex.names = 0.6 )
     }
 
-![](censusData_files/figure-markdown_strict/2-9.png)![](censusData_files/figure-markdown_strict/2-10.png)![](censusData_files/figure-markdown_strict/2-11.png)![](censusData_files/figure-markdown_strict/2-12.png)![](censusData_files/figure-markdown_strict/2-13.png)![](censusData_files/figure-markdown_strict/2-14.png)![](censusData_files/figure-markdown_strict/2-15.png)![](censusData_files/figure-markdown_strict/2-16.png)![](censusData_files/figure-markdown_strict/2-17.png)![](censusData_files/figure-markdown_strict/2-18.png)![](censusData_files/figure-markdown_strict/2-19.png)![](censusData_files/figure-markdown_strict/2-20.png)![](censusData_files/figure-markdown_strict/2-21.png)![](censusData_files/figure-markdown_strict/2-22.png)![](censusData_files/figure-markdown_strict/2-23.png)![](censusData_files/figure-markdown_strict/2-24.png)![](censusData_files/figure-markdown_strict/2-25.png)![](censusData_files/figure-markdown_strict/2-26.png)![](censusData_files/figure-markdown_strict/2-27.png)![](censusData_files/figure-markdown_strict/2-28.png)![](censusData_files/figure-markdown_strict/2-29.png)![](censusData_files/figure-markdown_strict/2-30.png)![](censusData_files/figure-markdown_strict/2-31.png)![](censusData_files/figure-markdown_strict/2-32.png)![](censusData_files/figure-markdown_strict/2-33.png)![](censusData_files/figure-markdown_strict/2-34.png)![](censusData_files/figure-markdown_strict/2-35.png)![](censusData_files/figure-markdown_strict/2-36.png)![](censusData_files/figure-markdown_strict/2-37.png)![](censusData_files/figure-markdown_strict/2-38.png)![](censusData_files/figure-markdown_strict/2-39.png)![](censusData_files/figure-markdown_strict/2-40.png)![](censusData_files/figure-markdown_strict/2-41.png)
+![](censusData_files/figure-markdown_strict/2A-9.png)![](censusData_files/figure-markdown_strict/2A-10.png)![](censusData_files/figure-markdown_strict/2A-11.png)![](censusData_files/figure-markdown_strict/2A-12.png)![](censusData_files/figure-markdown_strict/2A-13.png)![](censusData_files/figure-markdown_strict/2A-14.png)![](censusData_files/figure-markdown_strict/2A-15.png)![](censusData_files/figure-markdown_strict/2A-16.png)![](censusData_files/figure-markdown_strict/2A-17.png)![](censusData_files/figure-markdown_strict/2A-18.png)![](censusData_files/figure-markdown_strict/2A-19.png)![](censusData_files/figure-markdown_strict/2A-20.png)![](censusData_files/figure-markdown_strict/2A-21.png)![](censusData_files/figure-markdown_strict/2A-22.png)![](censusData_files/figure-markdown_strict/2A-23.png)![](censusData_files/figure-markdown_strict/2A-24.png)![](censusData_files/figure-markdown_strict/2A-25.png)![](censusData_files/figure-markdown_strict/2A-26.png)![](censusData_files/figure-markdown_strict/2A-27.png)![](censusData_files/figure-markdown_strict/2A-28.png)![](censusData_files/figure-markdown_strict/2A-29.png)![](censusData_files/figure-markdown_strict/2A-30.png)![](censusData_files/figure-markdown_strict/2A-31.png)![](censusData_files/figure-markdown_strict/2A-32.png)![](censusData_files/figure-markdown_strict/2A-33.png)![](censusData_files/figure-markdown_strict/2A-34.png)![](censusData_files/figure-markdown_strict/2A-35.png)![](censusData_files/figure-markdown_strict/2A-36.png)![](censusData_files/figure-markdown_strict/2A-37.png)![](censusData_files/figure-markdown_strict/2A-38.png)![](censusData_files/figure-markdown_strict/2A-39.png)![](censusData_files/figure-markdown_strict/2A-40.png)![](censusData_files/figure-markdown_strict/2A-41.png)
 
-    ##there are variables with "?" and "Not in universe"
-    ##we'll treat this as missing data and set to NA to make it easier to work with
+#### B. Treat data with "?" and "Not in universe" as missing data and set to NA to make it easier to work with in subsequent analyses. Also, rename income\_level levels to make easier.
+
     #note: this is a bit more complicated because we're dealing with factors but we can use recode_factor function from dplyr package
     for(i in notContVar) {
       census[ ,i] = recode_factor(census[ ,i], " ?" = NA_character_)
@@ -231,9 +206,9 @@
 
     levels(census[ ,"income_level"]) = c("under", "over")
 
-###### Step 3: Create a model using these variables (you can use whichever variables you want, or even create you own; for example, you could find the ratio or relationship between different variables, the one-hot encoding of “categorical” variables, etc.) to model wining more or less than $50,000 / year. Here, the idea would be for you to test one or two algorithms, such as logistic regression, or a decision tree. Feel free to choose others if wish.
+### Step 3: Create a model using these variables (you can use whichever variables you want, or even create you own; for example, you could find the ratio or relationship between different variables, the one-hot encoding of “categorical” variables, etc.) to model wining more or less than $50,000 / year. Here, the idea would be for you to test one or two algorithms, such as logistic regression, or a decision tree. Feel free to choose others if wish.
 
-    ## I want to explore the data further before choosing variables for model building.
+#### A. Explore the data further before choosing variables for model building.
 
     #get how many entries (rows) have missing data
     sum(apply(census, 1, function(i) sum(is.na(i)) > 0))
@@ -337,7 +312,8 @@
 
     #some columns are complete (like age, education, wage_per_hour) and these seem like good variables to use to build models
 
-    ##for complete columns, create visualizations to see if there's patterns related to income_level
+### B. For complete columns, create visualizations to see if there's patterns related to income\_level
+
     #get variables with no missing data
     completeCol = which(numMissingPerCol == 0)
 
@@ -355,7 +331,7 @@
       print(plotDensityByIncome(i)) #need print here because lattice plot is strange in for loops
     }
 
-![](censusData_files/figure-markdown_strict/3-1.png)![](censusData_files/figure-markdown_strict/3-2.png)![](censusData_files/figure-markdown_strict/3-3.png)![](censusData_files/figure-markdown_strict/3-4.png)![](censusData_files/figure-markdown_strict/3-5.png)![](censusData_files/figure-markdown_strict/3-6.png)![](censusData_files/figure-markdown_strict/3-7.png)
+![](censusData_files/figure-markdown_strict/3B-1.png)![](censusData_files/figure-markdown_strict/3B-2.png)![](censusData_files/figure-markdown_strict/3B-3.png)![](censusData_files/figure-markdown_strict/3B-4.png)![](censusData_files/figure-markdown_strict/3B-5.png)![](censusData_files/figure-markdown_strict/3B-6.png)![](censusData_files/figure-markdown_strict/3B-7.png)
 
     #function to plot histograms of non-continuous variable by income_level
     plotHistByIncome = function(i) {
@@ -366,9 +342,9 @@
       print(plotHistByIncome(i))
     }
 
-![](censusData_files/figure-markdown_strict/3-8.png)![](censusData_files/figure-markdown_strict/3-9.png)![](censusData_files/figure-markdown_strict/3-10.png)![](censusData_files/figure-markdown_strict/3-11.png)![](censusData_files/figure-markdown_strict/3-12.png)![](censusData_files/figure-markdown_strict/3-13.png)![](censusData_files/figure-markdown_strict/3-14.png)![](censusData_files/figure-markdown_strict/3-15.png)![](censusData_files/figure-markdown_strict/3-16.png)![](censusData_files/figure-markdown_strict/3-17.png)![](censusData_files/figure-markdown_strict/3-18.png)![](censusData_files/figure-markdown_strict/3-19.png)![](censusData_files/figure-markdown_strict/3-20.png)![](censusData_files/figure-markdown_strict/3-21.png)![](censusData_files/figure-markdown_strict/3-22.png)
+![](censusData_files/figure-markdown_strict/3B-8.png)![](censusData_files/figure-markdown_strict/3B-9.png)![](censusData_files/figure-markdown_strict/3B-10.png)![](censusData_files/figure-markdown_strict/3B-11.png)![](censusData_files/figure-markdown_strict/3B-12.png)![](censusData_files/figure-markdown_strict/3B-13.png)![](censusData_files/figure-markdown_strict/3B-14.png)![](censusData_files/figure-markdown_strict/3B-15.png)![](censusData_files/figure-markdown_strict/3B-16.png)![](censusData_files/figure-markdown_strict/3B-17.png)![](censusData_files/figure-markdown_strict/3B-18.png)![](censusData_files/figure-markdown_strict/3B-19.png)![](censusData_files/figure-markdown_strict/3B-20.png)![](censusData_files/figure-markdown_strict/3B-21.png)![](censusData_files/figure-markdown_strict/3B-22.png)
 
-    ##based on the plots, I'm going to do two logistic regression with different predictors:
+#### C. Based on the plots, I'm going to do two logistic regression with different predictors: model 1 incorporates many of the variables that appear to have different distributions by income\_level and model 2 is a reduced set of variables.
 
     #model 1- predictors: age, sex, race, marital status, education, detailed industry recode, detailed occupation recode, weeks worked in year, and number persons worked for employer
     model_1 = glm(income_level ~ age + sex + race + marital_stat + education + detailed_industry_recode + detailed_occupation_recode + weeks_worked_in_year + num_persons_worked_for_employer, family = binomial, na.action = na.omit, data = census) 
@@ -658,7 +634,7 @@
     ## Number of Fisher Scoring iterations: 19
 
     #model 2- predictors: age, sex, race, education, weeks worked in year
-    #this a reduced set of the predictors used for model 1 because I wanted to know if we could still do accurate predictions with fewers predictors  
+    #this a reduced set of the predictors used for model 1 because I wanted to know if we could still do accurate predictions with fewers predictors (as many variables likely highly correlated)
     model_2 = glm(income_level ~ age + sex + race + education + weeks_worked_in_year, data = census, family = binomial, na.action = na.omit) 
 
     #get summary of model 2
@@ -735,7 +711,9 @@
     ## 
     ## Number of Fisher Scoring iterations: 18
 
-###### Step 4: Choose the model that appears to have the highest performance based on a comparison between reality (the 42nd variable) and the model’s prediction.
+### Step 4: Choose the model that appears to have the highest performance based on a comparison between reality (the 42nd variable) and the model’s prediction.
+
+#### A. Predict model outcome of learning data and calculate accuracy for each model.
 
     ##using model, predict outcome
     #if prediction > 0.5, label as "over", else label as "under" $50K income level
@@ -756,7 +734,38 @@
 
     ## [1] 0.9426181
 
-    ##model 1 is slightly more accurate but there are many more degrees of freedom so is it actually better?
+#### B. Plot ROC curves to visualize and compare model sensitivity (true positive rate) and specificity (true negative rate) where "over" is positive
+
+    #format data as numeric for ROC curves
+    pred_model1_numeric = ifelse(pred_model1 == "under", 0, 1)
+    pred_model2_numeric = ifelse(pred_model2 == "under", 0, 1)
+
+    income_level_numeric = ifelse(census[ ,"income_level"] == "under", 0, 1)
+
+    #get ROC
+    roc_model1 = roc(income_level_numeric ~ pred_model1_numeric, data = census)
+    roc_model2 = roc(income_level_numeric ~ pred_model2_numeric, data = census)
+
+    #plot ROC curves
+    plot(roc_model1, col = colPal_all[1], main = "ROC curves (over = case, under = control)")
+    lines(roc_model2, col = colPal_all[4])
+    legend("topleft", c("Model 1", "Model 2"), col = colPal_all[c(1,4)], lty = 1, lwd = 2)
+
+![](censusData_files/figure-markdown_strict/4B-1.png)
+
+    #get area under curves for each model
+    auc(roc_model1)
+
+    ## Area under the curve: 0.6598
+
+    auc(roc_model2)
+
+    ## Area under the curve: 0.6016
+
+    #model 1 has greater area under curve which is another statement about it's greater accuracy
+
+#### C. Model 1 is slightly more accurate but there are many more degrees of freedom. Perform a likelihood ratio test to compare models.
+
     #these models are nested so can do likelihood ratio test
     lrtest(model_1, model_2)
 
@@ -774,19 +783,40 @@
 
     #they are statistically significant despite difference in degrees of freedom so let's proceed with model 1 as best fit of the 2
 
-    ##plot ROC curves to visualize and compare model sensitivity (true positive rate) and specificity (true negative rate) where "over" is positive
+### Step 5: Apply your model to the test file and measure it’s real performance on it (same method as above).
 
-    #format data as numeric for ROC curves
-    pred_model1_numeric = ifelse(pred_model1 == "under", 1, 2)
-    roc_model1 = roc(income_level ~ pred_model1_numeric, data = census)
+#### A. Read and format test data.
 
-    pred_model2_numeric = ifelse(pred_model2 == "under", 1, 2)
-    roc_model2 = roc(income_level ~ pred_model2_numeric, data = census)
+    #read test csv file
+    census_test = read.csv("census_income_test.csv", header = FALSE)
 
-    plot(roc_model1, col = colPal_all[1], main = "ROC curves (over = case, under = control)")
-    lines(roc_model2, col = colPal_all[4])
-    legend("topleft", c("Model 1", "Model 2"), col = colPal_all[c(1,4)], lty = 1)
+    #rename columns of dataset
+    colnames(census_test) = colNames_noSpace
 
-![](censusData_files/figure-markdown_strict/4-1.png)
+    #change levels to over/under
+    levels(census_test[ ,"income_level"])
 
-###### Step 5: Apply your model to the test file and measure it’s real performance on it (same method as above).
+    ## [1] " - 50000." " 50000+."
+
+    levels(census_test[ ,"income_level"]) = c("under", "over")
+
+    #code nominal variables as factors
+    for(i in notContVar) {
+      census_test[ ,i] = as.factor(census_test[ ,i])  
+    }
+
+#### B. Using model 1, predict income\_level on test data and calculate accuracy.
+
+    #if prediction > 0.5, label as "over", else label as "under" $50K income level
+    probs_test_model1 = predict(model_1,  type='response', newdata = census_test)
+
+    ## Warning in predict.lm(object, newdata, se.fit, scale = 1, type =
+    ## ifelse(type == : prediction from a rank-deficient fit may be misleading
+
+    pred_test_model1 = ifelse(probs_test_model1 > 0.5, "over", "under")
+
+    #calculate accuracy
+    accuracy_test_model1 = mean(pred_test_model1 == census_test[ , "income_level"])
+    accuracy_test_model1
+
+    ## [1] 0.9491089
