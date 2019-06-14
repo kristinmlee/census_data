@@ -1,7 +1,6 @@
 
-## Census Data Analysis
-### Kristin Lee
-### June 2019
+# Census Data Analysis
+### Kristin Lee (June 2019)
 
 
 #### Load necessary packages.
