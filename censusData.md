@@ -1,6 +1,6 @@
 
-##Census Data Analysis
-###Kristin Lee
+## Census Data Analysis
+### Kristin Lee
 ### June 2019
 
 
