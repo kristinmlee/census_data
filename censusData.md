@@ -1,3 +1,9 @@
+
+##Census Data Analysis
+###Kristin Lee
+### June 2019
+
+
 #### Load necessary packages.
 
     library(dplyr)
@@ -634,7 +640,7 @@
     ## Number of Fisher Scoring iterations: 19
 
     #model 2- predictors: age, sex, race, education, weeks worked in year
-    #this a reduced set of the predictors used for model 1 because I wanted to know if we could still do accurate predictions with fewers predictors (as many variables likely highly correlated)
+    #this a reduced set of the predictors used for model 1 because I wanted to know if we could still do accurate predictions with fewers predictors (as many variables likely highly correlated) and specifically without information about the type of job (occupation/industry)
     model_2 = glm(income_level ~ age + sex + race + education + weeks_worked_in_year, data = census, family = binomial, na.action = na.omit) 
 
     #get summary of model 2
@@ -710,6 +716,10 @@
     ## AIC: 59196
     ## 
     ## Number of Fisher Scoring iterations: 18
+Based on these summaries, we can see which variables impact income level by looking at the p-value of their Z scores (Pr(>|z|)). Our continuous variables, age, number of weeks worked in the year, and number of persons worked for employer significantly affect income_level. For nominal variables (factors), we have p-values for all levels which are informative of the difference of the mean output for a given factor level. You can see some variables significantly affect income_level but there is no difference between certain sets of variable levels. For example, for race, prediction of income_level is impacted whether you are white or non-white, but there is no significant difference in the mean income_level between Asian or Pacific Islander, black, or other. Lastly, in model 1, we see NAs in the last two occupation recode. I am not sure why this is and would need to explore further. I initially thought this was because there were fewer observations with these values, but level 20 has fewer entries than level 45. It may have something to do with having too many levels and likely should be removed from the model.
+
+
+
 
 ### Step 4: Choose the model that appears to have the highest performance based on a comparison between reality (the 42nd variable) and the model’s prediction.
 
