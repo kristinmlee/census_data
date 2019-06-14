@@ -349,7 +349,7 @@
 
 ![](censusData_files/figure-markdown_strict/3B-8.png)![](censusData_files/figure-markdown_strict/3B-9.png)![](censusData_files/figure-markdown_strict/3B-10.png)![](censusData_files/figure-markdown_strict/3B-11.png)![](censusData_files/figure-markdown_strict/3B-12.png)![](censusData_files/figure-markdown_strict/3B-13.png)![](censusData_files/figure-markdown_strict/3B-14.png)![](censusData_files/figure-markdown_strict/3B-15.png)![](censusData_files/figure-markdown_strict/3B-16.png)![](censusData_files/figure-markdown_strict/3B-17.png)![](censusData_files/figure-markdown_strict/3B-18.png)![](censusData_files/figure-markdown_strict/3B-19.png)![](censusData_files/figure-markdown_strict/3B-20.png)![](censusData_files/figure-markdown_strict/3B-21.png)![](censusData_files/figure-markdown_strict/3B-22.png)
 
-#### C. Based on the plots, I'm going to do two logistic regression with different predictors: model 1 incorporates many of the variables that appear to have different distributions by income\_level and model 2 is a reduced set of variables.
+#### C. Based on the plots, I'm going to do two logistic regressions with different predictors: model 1 incorporates many of the variables that appear to have different distributions by income\_level and model 2 is a reduced set of variables.
 
     #model 1- predictors: age, sex, race, marital status, education, detailed industry recode, detailed occupation recode, weeks worked in year, and number persons worked for employer
     model_1 = glm(income_level ~ age + sex + race + marital_stat + education + detailed_industry_recode + detailed_occupation_recode + weeks_worked_in_year + num_persons_worked_for_employer, family = binomial, na.action = na.omit, data = census) 
